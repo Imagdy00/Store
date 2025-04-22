@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Domain.Contracts;
+using Domain.Exceptions;
 using Domain.Models;
 using Microsoft.VisualBasic;
 using Services.Abstractions;
@@ -29,12 +30,14 @@ public class ProductService(IUnitOfWork unitOfWork , IMapper mapper) : IProductS
 
         var products = await unitOfWork.GetRepository<Product, int>().GetAllAsync(spec);
 
+        var result = mapper.Map<IEnumerable<ProductResultDto>>(products);
+
         var specCount = new ProductWithCountSpecifications(specParams); 
 
         var count = await unitOfWork.GetRepository<Product, int>().CountAsync(specCount);
 
 
-       var result =  mapper.Map<IEnumerable<ProductResultDto>>(products);
+       
 
         return new PaginationResponse<ProductResultDto>(specParams.pageIndex , specParams.pageSize , 0 , result);  
     }
@@ -46,7 +49,7 @@ public class ProductService(IUnitOfWork unitOfWork , IMapper mapper) : IProductS
 
        var product = await unitOfWork.GetRepository<Product , int > ().GetAsync(spec);
 
-        if (product is null) return null;
+        if (product is null)  throw new ProductNotFoundExceptions(id);
 
         var result = mapper.Map<ProductResultDto>(product);
 
