@@ -1,13 +1,17 @@
 
 using Domain.Contracts;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Persistence;
 using Persistence.Data;
 using Services;
 using Services.Abstractions;
+using Shared.ErrorModels;
+using Store.Api.Extentions;
+using Store.Api.Middlewares;
 
-using AssemblyMapping =  Services.AssemblyReference; 
 
 namespace Store.Api;
 
@@ -19,51 +23,21 @@ public class Program
 
         // Add services to the container.
 
-        builder.Services.AddControllers();
-        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-        builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
 
-        builder.Services.AddDbContext<StoreDbContext>(options =>
-        {
-            //options.UseSqlServer(builder.Configuration["ConnectionStrings:DefaultConnection"]);
+        builder.Services.RegisterAllServices(builder.Configuration);
 
-            options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-        });
 
-        builder.Services.AddScoped<IDbInitializer, DbInitializer>(); // Allow DI For DbInitializer
 
-        builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-        builder.Services.AddAutoMapper(typeof(AssemblyMapping).Assembly);
-        builder.Services.AddScoped<IServiceManager, ServiceManager>();
 
-        
 
 
         var app = builder.Build();
 
-        using var scope = app.Services.CreateScope();
-        var dbInitializer = scope.ServiceProvider.GetRequiredService<IDbInitializer>();
-
-        await  dbInitializer.InitializeAsync();
 
 
-        // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI();
-        }
-
-        app.UseStaticFiles();
 
 
-        app.UseHttpsRedirection();
-
-        app.UseAuthorization();
-
-
-        app.MapControllers();
+        await app.ConfigureMiddlewares();
 
         app.Run();
     }
