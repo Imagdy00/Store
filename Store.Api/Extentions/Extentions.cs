@@ -4,6 +4,9 @@ using Shared.ErrorModels;
 using Services;
 using Domain.Contracts;
 using Store.Api.Middlewares;
+using Domain.Models.Identity;
+using Microsoft.AspNetCore.Identity;
+using Persistence.Identity;
 namespace Store.Api.Extentions;
 
 public static class Extentions
@@ -20,6 +23,8 @@ public static class Extentions
         
 
         services.AddInfrastructureServices(configuration);
+
+        services.AddIdentityServices();
 
         services.AddApplicationServices();
 
@@ -38,6 +43,17 @@ public static class Extentions
 
         return services;
     }
+
+
+    private static IServiceCollection AddIdentityServices(this IServiceCollection services)
+    {
+
+        services.AddIdentity<AppUser, IdentityRole>()
+            .AddEntityFrameworkStores<StoreIdentityDbContext>();
+
+        return services;
+    }
+
 
 
     private static IServiceCollection AddSwaggerServices(this IServiceCollection services)
@@ -112,6 +128,7 @@ public static class Extentions
         var dbInitializer = scope.ServiceProvider.GetRequiredService<IDbInitializer>();
 
         await dbInitializer.InitializeAsync();
+        await dbInitializer.InitializeIdentityAsync();
 
 
         return app;
@@ -125,6 +142,9 @@ public static class Extentions
 
         return app;
     }
+
+
+
 
 
 

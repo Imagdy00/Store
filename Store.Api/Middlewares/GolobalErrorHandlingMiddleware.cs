@@ -48,6 +48,8 @@ public class GolobalErrorHandlingMiddleware
         {
             NotFoundException => StatusCodes.Status404NotFound,
             BadRequestException => StatusCodes.Status400BadRequest,
+            ValidationException => StatusCodes.Status400BadRequest,
+            UnauthorizedAccessException => HandleValidationExceptionAsync((ValidationException)ex , response),
             _ => StatusCodes.Status500InternalServerError
         };
 
@@ -70,4 +72,13 @@ public class GolobalErrorHandlingMiddleware
 
         await context.Response.WriteAsJsonAsync(response);
     }
+
+    private static  int HandleValidationExceptionAsync(ValidationException ex , ErrorDetails response)
+    {
+        response.Errors = ex.Errors;
+        return StatusCodes.Status400BadRequest;
+
+    }
+
+
 }
