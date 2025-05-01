@@ -15,4 +15,6 @@ public interface IServiceManager
 
     IAuthService AuthService { get; }
 
+    IOrderService OrderService { get; }
+
 }
