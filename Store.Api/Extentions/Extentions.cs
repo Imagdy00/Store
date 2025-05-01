@@ -7,7 +7,13 @@ using Store.Api.Middlewares;
 using Domain.Models.Identity;
 using Microsoft.AspNetCore.Identity;
 using Persistence.Identity;
+using Shared;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 namespace Store.Api.Extentions;
+
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 public static class Extentions
 {
@@ -26,7 +32,10 @@ public static class Extentions
 
         services.AddIdentityServices();
 
-        services.AddApplicationServices();
+        services.AddApplicationServices(configuration);
+
+        services.ConfigureJwtServices(configuration);
+        
 
 
 
@@ -40,6 +49,38 @@ public static class Extentions
     {
 
         services.AddControllers();
+
+        return services;
+    }
+
+
+
+    private static IServiceCollection ConfigureJwtServices(this IServiceCollection services , IConfiguration configuration)
+    {
+
+        var jwtOptions = configuration.GetSection("JwtOptions").Get<JwtOptions>();
+
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters()
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateIssuerSigningKey = true,
+                ValidateLifetime = true,
+
+                ValidIssuer = jwtOptions.Issuer,
+                ValidAudience = jwtOptions.Audience,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SecretKey))
+
+
+            };
+
+        });
 
         return services;
     }
@@ -113,7 +154,7 @@ public static class Extentions
         app.UseHttpsRedirection();
 
         app.UseAuthorization();
-
+        app.UseAuthorization();
 
         app.MapControllers();
 
